@@ -1,34 +1,29 @@
 import { getModelForClass } from "@typegoose/typegoose";
-import { Message, MessageEmbed, User } from "discord.js";
+import { DMChannel, Message, MessageEmbed, NewsChannel, TextChannel, User } from "discord.js";
 import { Connection } from "mongoose";
 import BotCommand from "../../lib/command";
 import { Gamer } from "../../types/user";
+import deletablemessage from "../../utils/deletablemessage";
 
 export default class SetCashCommand extends BotCommand {
 	constructor() {
 		super("setcash", "Admin command used to set a user's cash.", { category: "Admin" });
 	}
 
+	async sendInvalidParams(channel: TextChannel | DMChannel | NewsChannel) : Promise<void> {
+		return void await deletablemessage(channel, this.invalidParameters(), 5 * 1000);
+	}
+
 	async execute(message: Message, args: string[], db: Connection) : Promise<void> {
 
 		if(!message.member?.hasPermission(["ADMINISTRATOR"])) return;
 
-		if(args.length < 2) {
-			message.channel.send(this.invalidParameters()).then(msg => {
-				setTimeout(() => { if(msg.deletable) msg.delete(); }, 5*1000); //5sec.
-			});
-			return;
-		}
+		if(args.length < 2) return this.sendInvalidParams(message.channel);
 
 		const user = message.mentions.users.first();
 		const cash: number = Number(args[1]);
 
-		if(user == null || !cash) {
-			message.channel.send(this.invalidParameters()).then(msg => {
-				setTimeout(() => { if(msg.deletable) msg.delete(); }, 5*1000); //5sec.
-			});
-			return;
-		}
+		if(!user || !cash) return this.sendInvalidParams(message.channel);
 
 		const model = getModelForClass(Gamer, { existingConnection: db });
 		const existingUser = await model.findOne({ user_id: user.id });
@@ -39,7 +34,6 @@ export default class SetCashCommand extends BotCommand {
 			message.channel.send(this.updatedCashEmbed(user, cash));
 
 		} else message.channel.send(`${user.username} (${user.id}) is not registered in the database.`);
-
 	}
 
 	invalidParameters() : MessageEmbed {

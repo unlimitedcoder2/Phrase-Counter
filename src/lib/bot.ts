@@ -2,22 +2,21 @@ import { setGlobalOptions, Severity } from "@typegoose/typegoose";
 import { Client, ClientOptions, Collection, Message, MessageEmbed } from "discord.js";
 import { readdirSync } from "fs";
 import Mongoose from "mongoose";
+import { Config } from "../types/config";
 import BotCommand from "./command";
-
-const config = require('../../config.json');
 
 export class Bot extends Client {
 
 	public readonly commands: Collection<string, BotCommand>;
 	public readonly helpEmbed = new MessageEmbed();
 	private readonly prefix: string;
-	public db: Mongoose.Connection; 
+	public db: Mongoose.Connection;
 
-	constructor(options?: ClientOptions) {
-		super(options || {});
+	constructor(options: ClientOptions, public readonly config: Config) {
+		super(options);
 		
 		this.commands = new Collection();
-		this.prefix = config.prefix;
+		this.prefix = this.config.prefix;
 
 		this.initCommands(`../commands`);
 		this.initCommandHandler();
@@ -26,7 +25,7 @@ export class Bot extends Client {
 
 		this.initEvents(`../events`);
 
-		this.db = Mongoose.createConnection(`mongodb://${process.env.DB_HOST}:${process.env.DB_PORT}/${process.env.DB_NAME}`, { useNewUrlParser: true, useUnifiedTopology: true });
+		this.db = Mongoose.createConnection(process.env.DB_URL || "mongodb://127.0.0.1:27017/pcounter", { useNewUrlParser: true, useUnifiedTopology: true });
 		setGlobalOptions({ options: { allowMixed: Severity.ALLOW } });
 	}
 
@@ -65,16 +64,17 @@ export class Bot extends Client {
 		this.on("message", async (message: Message) => {
 			if(!message.content.startsWith(this.prefix) || message.author.bot) return;
 
-			const args: string[] = message.content.slice(this.prefix.length).trim().split(/ +/);
-			const commandName: string = args.shift()!.toLowerCase();
+			const args = message.content.slice(this.prefix.length).trim().split(/ +/);
+			const commandName = args.shift()!.toLowerCase();
 
-			const command: BotCommand | undefined = 
-				this.commands.get(commandName) || this.commands.find((cmd) => cmd.aliases.includes(commandName));
+			const command = this.commands.get(commandName) || this.commands.find((cmd) => cmd.aliases.includes(commandName));
 			
-			try {
-				if(command?.devcommand && !config.developers.includes(message.author.id)) return;
+			if(!command) return;
 
-				command?.execute(message, args, this.db);
+			try {
+				if(command.devcommand && !this.config.developers.includes(message.author.id)) return;
+
+				command.execute(message, args, this.db);
 
 			} catch(err) { console.error(err); }
 		})

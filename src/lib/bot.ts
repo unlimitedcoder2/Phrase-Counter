@@ -74,7 +74,7 @@ export class Bot extends Client {
 			try {
 				if(command.devcommand && !this.config.developers.includes(message.author.id)) return;
 
-				command.execute(message, args, this.db);
+				command.execute(this, message, args);
 
 			} catch(err) { console.error(err); }
 		})

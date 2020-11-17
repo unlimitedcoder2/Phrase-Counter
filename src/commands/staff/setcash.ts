@@ -1,6 +1,6 @@
 import { getModelForClass } from "@typegoose/typegoose";
 import { DMChannel, Message, MessageEmbed, NewsChannel, TextChannel, User } from "discord.js";
-import { Connection } from "mongoose";
+import { Bot } from "../../lib/bot";
 import BotCommand from "../../lib/command";
 import { Gamer } from "../../types/user";
 import deletablemessage from "../../utils/deletablemessage";
@@ -14,7 +14,7 @@ export default class SetCashCommand extends BotCommand {
 		return void await deletablemessage(channel, this.invalidParameters(), 5 * 1000);
 	}
 
-	async execute(message: Message, args: string[], db: Connection) : Promise<void> {
+	async execute(bot: Bot, message: Message, args: string[]) : Promise<void> {
 
 		if(!message.member?.hasPermission(["ADMINISTRATOR"])) return;
 
@@ -25,7 +25,7 @@ export default class SetCashCommand extends BotCommand {
 
 		if(!user || !cash) return this.sendInvalidParams(message.channel);
 
-		const model = getModelForClass(Gamer, { existingConnection: db });
+		const model = getModelForClass(Gamer, { existingConnection: bot.db });
 		const existingUser = await model.findOne({ user_id: user.id });
 
 		if(existingUser) {

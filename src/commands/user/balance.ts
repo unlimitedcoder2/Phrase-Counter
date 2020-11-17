@@ -1,6 +1,6 @@
 import { getModelForClass } from "@typegoose/typegoose";
 import { Message, MessageEmbed, User } from "discord.js";
-import { Connection } from "mongoose";
+import { Bot } from "../../lib/bot";
 import BotCommand from "../../lib/command";
 import { Gamer } from "../../types/user";
 
@@ -9,15 +9,11 @@ export default class BalanceCommand extends BotCommand {
 		super("balance", "Get the amount of money you have.", { aliases: ["bal", "money", "cash"], category: "Economy" });
 	}
 
-	async execute(message: Message, args: string[], db: Connection) : Promise<void> {
+	async execute(bot: Bot, message: Message, args: string[]) : Promise<void> {
 
-		const model = getModelForClass(Gamer, { existingConnection: db });
+		const model = getModelForClass(Gamer, { existingConnection: bot.db });
 
-		let user;
-		// other person
-		if(args.length >= 1) user = message.mentions.users.first();
-		// self
-		else user = message.author;
+		let user = args.length >= 1 ? message.mentions.users.first() : message.author;
 
 		if(!user) {
 			message.channel.send(this.noUserByThatMention()).then(msg => {

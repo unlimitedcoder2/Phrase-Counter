@@ -1,4 +1,4 @@
-import { Message, APIMessageContentResolvable, MessageAdditions, MessageOptions, Channel, TextChannel, NewsChannel, DMChannel } from "discord.js";
+import { Message, APIMessageContentResolvable, MessageAdditions, MessageOptions, TextChannel, NewsChannel, DMChannel } from "discord.js";
 
 /**
  * 

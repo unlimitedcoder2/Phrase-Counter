@@ -39,7 +39,7 @@ export class Bot extends Client {
 			if(ele.endsWith(".js") || ele.endsWith(".ts")) {
 				try {
 					const { default: cmdFile } = require(`${dir}/${ele}`);
-					const command: BotCommand = new cmdFile();
+					const command: BotCommand = new cmdFile(this);
 
 					return this.commands.set(command.name, command);
 				} catch(err) { 

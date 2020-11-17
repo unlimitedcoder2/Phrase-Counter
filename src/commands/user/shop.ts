@@ -7,16 +7,16 @@ import { ShopItem } from "../../types/config";
 export default class ShopCommand extends BotCommand {
 	
 	private readonly numsToEmoji: string[];
-
-	constructor() {
+	readonly shop: Shop;
+	
+	constructor(bot: Bot) {
 		super("shop", "Shop command.", { aliases: ["store"], devcommand: true, category: "Economy" });
-
+		this.shop = new Shop(bot.config.shop);
 		this.numsToEmoji = ['1️⃣', '2️⃣', '3️⃣', '4️⃣', '5️⃣', '❌'];
 	}
 
 	async execute(bot: Bot,message: Message, args: string[]) {
-		const shop = new Shop(bot.config.shop);
-		this.displayShopEmbed(message.author, 1, message, shop);
+		this.displayShopEmbed(message.author, 1, message);
 	}
 
 	/**
@@ -25,8 +25,8 @@ export default class ShopCommand extends BotCommand {
 	 * @param page The catalog page that should be displayed.
 	 * @param message 
 	 */
-	async displayShopEmbed(user: User, page: number, message: Message, shop: Shop) {
-		let items: ShopItem[] = shop.getCatalogPage(page-1)
+	async displayShopEmbed(user: User, page: number, message: Message) {
+		let items: ShopItem[] = this.shop.getCatalogPage(page-1)
 
 		const embed = new MessageEmbed();
 		embed.setAuthor(`Shop - Page: ${page}.`, user.displayAvatarURL({ dynamic: true }));
